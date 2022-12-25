@@ -1,65 +1,86 @@
-from flask import Flask 
-from flask_sqlalchemy import SQLAlchemy
+import sqlalchemy as db
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///base.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+Base = declarative_base()
 
-db = SQLAlchemy(app)
+class People(Base):
+    __tablename__ = "people"
 
-class People(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(20), nullable=False)
-    second_name = db.Column(db.String(20), nullable=False)
-    age = db.Column(db.Integer, nullable=False)
-    phone = db.Column(db.Integer, nullable=False)
-    email = db.Column(db.String(50), nullable=False)
+    id = db.Column("id", db.Integer, primary_key=True)
+    first_name = db.Column("firstname", db.String)
+    second_name = db.Column("lastname", db.String)
+    gender = db.Column("gender", db.CHAR)
+    age = db.Column("age", db.Integer)
+    phone = db.Column("phone", db.String)
+    email = db.Column("email", db.String)
 
-    def __str__(self):
-        return f"First name: {self.first_name}\
-            \nSecond name: {self.second_name} \nAge: {self.age}\
-            \nPhone number: {self.phone} \nEmail: {self.email}"
+    def __init__(self, id, first_name, last_name, gender, age, phone, email):
+        self.id = id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.gender = gender
+        self.age = age
+        self.phone = phone
+        self.email = email
 
-
-class Card(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    number = db.Column(db.Integer, primary_key=True)
-    data =  db.Column(db.Integer, nullable=False)
-    cvv =  db.Column(db.Integer, nullable=False)
-    validity =  db.Column(db.Integer, nullable=False)
-
-    def __str__(self):
-        return (f"\nInfo about card: \nNumber: {self.number}\
-            \nData of issue: {self.data}\
-            \nCVV: {self.cvv} \nValidity: {self.validity} year's")
+    def __repr__(self):
+        return f"({self.id}) {self.first_name} {self.last_name} {self.gender} {self.age} {self.phone} {self.email}"
 
 
-class Job(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company = db.Column(db.String(20), nullable=False)
-    specialty = db.Column(db.String(20), nullable=False)
-    position = db.Column(db.String(20), nullable=False)
-    income = db.Column(db.Integer, nullable=False)
+class Card(Base):
+    __tablename__ = "card"
+
+    number = db.Column("number", db.Integer, primary_key=True)
+    data =  db.Column("data", db.String)
+    cvv =  db.Column("cvv", db.Integer)
+    validity =  db.Column("valitidy", db.Integer)
+    owner = db.Column(db.Integer, db.ForeignKey("people.id"))
+
+    def __init__(self, number, data, cvv, valitidy, owner):
+        self.number = number 
+        self.data = data
+        self.cvv = cvv
+        self.validity = valitidy
+        self.owner = owner
+
+    def __repr__(self):
+        return f"({self.number}) {self.data} {self.cvv} {self.validity} owned by {self.owner}."
+
+
+class Address(Base):
+    __tablename__ = "address"
+     
+    id = db.Column("id", db.Integer, primary_key=True)
+    country = db.Column("country", db.String)
+    city = db.Column("city", db.String)
+    street = db.Column("street", db.String)
+    house = db.Column("house", db.Integer)
+    owner = db.Column(db.Integer, db.ForeignKey("people.id"))
     
-    def __str__(self):
-        return (f"\nInfo about job: \nCompany: {self.company}\
-            \nSpecialty: {self.specialty} \nPosition: {self.position}\
-             \nIncome for the year: {self.income}$")
+    def __init__(self, id, country, city, street, house, owner):
+        self.id = id
+        self.country = country
+        self.city = city
+        self.street = street
+        self.house = house 
+        self. owner = owner 
 
+    def __repr__(self):
+        return f"({self.id}) {self.country} {self.city} {self.street} {self.house}  {self.owner}."
 
-class Address(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    country = db.Column(db.String(20), nullable=False)
-    city = db.Column(db.String(20), nullable=False)
-    street = db.Column(db.String(20), nullable=False)
-    house = db.Column(db.Integer, nullable=False)
-    
-    def __str__(self):
-        return (f"\nInfo about address: \nCountry: {self.country}\
-            \nCity: {self.city} \nStreet: {self.street}\
-            \nHouse: {self.house}$")
+engine = db.create_engine("sqlite:///mydb.db", echo=True)
+Base.metadata.create_all(bind=engine)
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        app.run(debug=True)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+person = People(12312, "Mike", "Pop", "m", 28, "066565656", "123@gmail.com")
+card = Card(20483434234234, "09/23", 123, 5, person.id)
+address = Address(14333,"USA", "Miami", "Bread", 56, person.id)
+session.add(person)
+session.add(card)
+session.add(address)
+session.commit()
+
+print(session.query(People, Card, Address).all())
