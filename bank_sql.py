@@ -9,7 +9,7 @@ class People(Base):
 
     id = db.Column("id", db.Integer, primary_key=True)
     first_name = db.Column("firstname", db.String)
-    second_name = db.Column("lastname", db.String)
+    last_name = db.Column("lastname", db.String)
     gender = db.Column("gender", db.CHAR)
     age = db.Column("age", db.Integer)
     phone = db.Column("phone", db.String)
