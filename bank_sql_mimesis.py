@@ -3,10 +3,22 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from mimesis import Generic
 import argparse
+import logging
+
+logging.basicConfig(
+    level=logging.ERROR,
+    format="{asctime} {levelname} {message}",
+    style='{'
+)
 
 Base = declarative_base()
 
 class People(Base):
+    """
+    A model that describes a people with the following variables:
+    id, full_name, nationality, age, job, phone, email.
+    
+    """
     __tablename__ = "people"
 
     id = db.Column("id", db.Integer, primary_key=True)
@@ -21,6 +33,13 @@ class People(Base):
         super(People, self).__init__(**kwargs)
 
     def bootstrap(count, locale: str):
+        """A function that generates random values for the people model and 
+        automatically comments them to the database.
+
+        Args:
+            count (_type_): The amount of data to generate
+            locale (str): Local data to be used for generation
+        """
         if 0 <= count <= 5000:
             generic = Generic(locale)
             
@@ -36,10 +55,15 @@ class People(Base):
                 )
                 session.add(people)
                 session.commit()
-        else: print("The number of instances of model 'People' is not in the range: 0 : 5000")
+        else: logging.error("The number of instances of model 'People' is not in the range: 0 : 5000") 
 
 
 class Card(Base):
+    """
+    A model that describes someone's credit card with the following variables:
+    id, number, data, cvv, validity, owner.
+
+    """
     __tablename__ = "card"
 
     id = db.Column("id", db.Integer, primary_key=True)
@@ -53,6 +77,13 @@ class Card(Base):
         super(Card, self).__init__(**kwargs)
 
     def bootstrap(count, locale: str):
+        """A function that generates random values for the card model and 
+        automatically comments them to the database.
+
+        Args:
+            count (_type_): The amount of data to generate
+            locale (str): Local data to be used for generation
+        """
         if 0 <= count <= 5000:
             generic = Generic(locale)
             
@@ -67,10 +98,15 @@ class Card(Base):
                 ) 
                 session.add(card)
                 session.commit()
-        else: print("The number of instances of model 'Card' is not in the range: 0 : 5000")
+        else: logging.error("The number of instances of model 'Card' is not in the range: 0 : 5000")
 
 
 class Address(Base):
+    """
+    A model that describes someone's address with the following variables:
+    id, country, city, street, house, zip code, inhabitant.
+    
+    """
     __tablename__ = "address"
      
     id = db.Column("id", db.Integer, primary_key=True)
@@ -85,6 +121,13 @@ class Address(Base):
         super(Address, self).__init__(**kwargs)
 
     def bootstrap(count, locale: str):
+        """A function that generates random values for the address model and 
+        automatically comments them to the database.
+
+        Args:
+            count (_type_): The amount of data to generate
+            locale (str): Local data to be used for generation
+        """
         if 0 <= count <= 5000:   
             generic = Generic(locale)
             
@@ -100,7 +143,7 @@ class Address(Base):
                 )
                 session.add(address)
                 session.commit()
-        else: print("The number of instances of model 'Address' is not in the range: 0 : 5000")
+        else: logging.error("The number of instances of model 'Address' is not in the range: 0 : 5000")
 
 def pars():
     parser = argparse.ArgumentParser()
