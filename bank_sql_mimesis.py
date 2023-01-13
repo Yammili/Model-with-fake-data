@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from mimesis import Generic
 import argparse
 import logging
+from os import path
+import random
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -37,7 +39,7 @@ class People(Base):
         automatically comments them to the database.
 
         Args:
-            count (_type_): The amount of data to generate
+            count (int): The amount of data to generate
             locale (str): Local data to be used for generation
         """
         if 0 <= count <= 5000:
@@ -45,7 +47,6 @@ class People(Base):
             
             for _ in range(count):
                 people = People(
-                    id = generic.numeric.increment(),
                     full_name = generic.person.full_name(),
                     nationality = generic.person.nationality(),
                     age = generic.person.age(minimum=16, maximum=100),
@@ -56,6 +57,19 @@ class People(Base):
                 session.add(people)
                 session.commit()
         else: logging.error("The number of instances of model 'People' is not in the range: 0 : 5000") 
+    
+    def count_people():
+        """A function that generates a random id of a person who is in the database
+
+        Returns:
+            int: Returns a random id
+        """
+        list = []
+        for val in session.query(People.id).distinct():
+            list.append(val[0])
+        
+        values = list[random.randint(0, len(list)-1)]
+        return values
 
 
 class Card(Base):
@@ -71,7 +85,7 @@ class Card(Base):
     data =  db.Column("data", db.String)
     cvv =  db.Column("cvv", db.String)
     validity =  db.Column("valitidy", db.Integer)
-    owner = db.Column("owner", db.String)
+    owner_id = db.Column("owner", db.Integer, db.ForeignKey("people.id"))
 
     def __init__(self, **kwargs):
         super(Card, self).__init__(**kwargs)
@@ -81,7 +95,7 @@ class Card(Base):
         automatically comments them to the database.
 
         Args:
-            count (_type_): The amount of data to generate
+            count (int): The amount of data to generate
             locale (str): Local data to be used for generation
         """
         if 0 <= count <= 5000:
@@ -89,12 +103,11 @@ class Card(Base):
             
             for _ in range(count):
                 card = Card(
-                    id = generic.numeric.increment(),
                     number = generic.payment.credit_card_number(),
                     data = generic.payment.credit_card_expiration_date(minimum=16, maximum=27),
                     cvv = generic.payment.cvv(),
                     validity = generic.random.randint(a=4, b=5),
-                    owner = generic.person.full_name()
+                    owner_id = People.count_people()
                 ) 
                 session.add(card)
                 session.commit()
@@ -116,6 +129,7 @@ class Address(Base):
     house = db.Column("house", db.Integer)
     zip_code = db.Column("zip_code", db.Integer)
     inhabitant = db.Column("inhabitant", db.String)
+    owner_id = db.Column("owner", db.Integer, db.ForeignKey("people.id"))
     
     def __init__(self, **kwargs):
         super(Address, self).__init__(**kwargs)
@@ -125,7 +139,7 @@ class Address(Base):
         automatically comments them to the database.
 
         Args:
-            count (_type_): The amount of data to generate
+            count (int): The amount of data to generate
             locale (str): Local data to be used for generation
         """
         if 0 <= count <= 5000:   
@@ -133,19 +147,46 @@ class Address(Base):
             
             for _ in range(count):
                 address = Address(
-                    id = generic.numeric.increment(),
                     country = generic.address.country(),
                     city = generic.address.city(),
                     street = generic.address.street_name(),
                     house = generic.address.street_number(maximum=400),
                     zip_code = generic.address.zip_code(),
-                    inhabitant = generic.person.full_name()
+                    inhabitant = generic.person.full_name(),
+                    owner_id = Address.count_address()
                 )
                 session.add(address)
                 session.commit()
         else: logging.error("The number of instances of model 'Address' is not in the range: 0 : 5000")
 
+    def count_address():
+        """A function that randomly generates the ID of the owner of the 
+        address and checks that the owner does not have two or more addresses.
+
+        Returns:
+            int: A random value of a person id without repetitions
+        """
+        list = []
+        for val in session.query(People.id).distinct():
+            list.append(val[0])
+
+        list_ad = []
+        for val in session.query(Address.owner_id).distinct():
+            list_ad.append(val[0])
+
+        for val in range(len(list_ad)):
+            if list_ad[val] in list:
+                list.remove(list_ad[val])
+        
+        values = list[random.randint(0, len(list)-1)]
+        return values
+
 def pars():
+    """A script generation method that generates the amount of data that the 
+    user enters through the console. Also checks if more addresses than people 
+    have been created.
+
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument("it_people", type=int, help="Number of iterations for model 'People'")
@@ -154,16 +195,20 @@ def pars():
 
     args = parser.parse_args()
     
-    People.bootstrap(args.it_people,"en")
-    Card.bootstrap(args.it_card,"en")
-    Address.bootstrap(args.it_address,"en")
+    if (session.query(People.id).count() + args.it_people) >= (session.query(Address.id).count() + args.it_address):
+        People.bootstrap(args.it_people,"en")
+        Card.bootstrap(args.it_card,"en")
+        Address.bootstrap(args.it_address,"en")
+    else:
+        logging.critical("The address should not be more than the people themselves")
 
 
 if __name__ == "__main__":
-    engine = db.create_engine("sqlite:///base.db", echo=True)
-    Base.metadata.create_all(bind=engine)
+    if not path.exists("sqlite:///base.db"):    
+        engine = db.create_engine("sqlite:///base.db", echo=True)
+        Base.metadata.create_all(bind=engine)
 
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
     pars()
