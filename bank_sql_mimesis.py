@@ -129,7 +129,6 @@ class Card(Base):
                 session.commit()
         else: logging.error("The number of instances of model 'Card' is not in the range: 0 : 5000")
 
-
 def delete(val):
     """The function that is used to delete a person and his card.
 
@@ -158,7 +157,6 @@ def pars():
     Card.bootstrap(args.it_card,"en")
 
     # delete(args.it_delete)
-
 
 if __name__ == "__main__":
     if not path.exists("sqlite:///base.db"):    
