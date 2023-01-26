@@ -47,7 +47,10 @@ class People(Base):
             count (int): The amount of data to generate
             locale (str): Local data to be used for generation
         """
-        if 0 <= count <= 5000:
+        
+        maxGen = 5000 #limiting the maximum number of data generations
+        
+        if 0 <= count <= maxGen:
             generic = Generic(locale)
             
             for _ in range(count):
@@ -67,9 +70,6 @@ class People(Base):
                 session.add(people)
                 session.commit()
         else: logging.error("The number of instances of model 'People' is not in the range: 0 : 5000") 
-    
-    def delete():
-        pass
     
     def count_people():
         """A function that generates a random id of a person who is in the database
@@ -111,7 +111,10 @@ class Card(Base):
             count (int): The amount of data to generate
             locale (str): Local data to be used for generation
         """
-        if 0 <= count <= 5000:
+        
+        maxGen = 5000 #limiting the maximum number of data generations
+        
+        if 0 <= count <= maxGen:
             generic = Generic(locale)
             
             for _ in range(count):
