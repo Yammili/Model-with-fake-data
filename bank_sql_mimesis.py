@@ -95,9 +95,9 @@ class Card(Base):
 
     id = db.Column("id", db.Integer, primary_key=True)
     number = db.Column("number", db.Integer)
-    data =  db.Column("data", db.String)
+    date =  db.Column("date", db.String)
     cvv =  db.Column("cvv", db.String)
-    validity =  db.Column("valitidy", db.Integer)
+    creation_date = db.Column("creation_date", db.String)
     owner_id = db.Column("owner", db.Integer, db.ForeignKey("people.id"))
 
     def __init__(self, **kwargs):
@@ -120,9 +120,9 @@ class Card(Base):
             for _ in range(count):
                 card = Card(
                     number = generic.payment.credit_card_number(),
-                    data = generic.payment.credit_card_expiration_date(minimum=16, maximum=27),
+                    date = generic.payment.credit_card_expiration_date(minimum=23, maximum=28),
                     cvv = generic.payment.cvv(),
-                    validity = generic.random.randint(a=4, b=5),
+                    creation_date = generic.datetime.formatted_date(start=2018, end=2023),
                     owner_id = People.count_people()
                 ) 
                 session.add(card)
