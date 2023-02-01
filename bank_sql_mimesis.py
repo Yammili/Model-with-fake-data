@@ -122,7 +122,7 @@ class Card(Base):
                     number = generic.payment.credit_card_number(),
                     date = generic.payment.credit_card_expiration_date(minimum=23, maximum=28),
                     cvv = generic.payment.cvv(),
-                    creation_date = generic.datetime.formatted_date(start=2018, end=2023),
+                    creation_date = generic.datetime.date(start=2018, end=2023),
                     owner_id = People.count_people()
                 ) 
                 session.add(card)
